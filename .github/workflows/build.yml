@@ -1,0 +1,35 @@
+name: YouTube Weekly Digest
+
+on:
+  schedule:
+    # 每週六 UTC 04:00 = 台灣時間 12:00
+    - cron: "0 4 * * 6"
+  workflow_dispatch:   # 允許手動觸發（測試用）
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run fetch script
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python fetch_youtube.py
+
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Auto update $(date +'%Y-%m-%d')"
+          git push
